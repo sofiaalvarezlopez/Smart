@@ -16,6 +16,13 @@ int cocina = 7;
 int sala = 8;
 //Representa el pin D8 del Arduino. En este caso, conectado al comedor.
 int comedor = 9;
+//Representa el pin D12 del Arduino, conectado al pin TRIG del sensor ultrasónico.
+int trig = 12;
+//Representa el pin D13 del Arduino, conectado al pin ECHO del sensor ultrasónico.
+int echo = 13;
+//Representa el voltaje que hay en el comedor.
+int voltaje_comedor;
+
 //Representa el texto leído por el módulo Bluetooth desde la aplicación en AppInventor.
 String readString;
 
@@ -28,7 +35,9 @@ pinMode(alcoba, OUTPUT);
 pinMode(cocina,OUTPUT);
 pinMode(sala,OUTPUT);
 pinMode(comedor,OUTPUT);
-
+pinMode(trig,OUTPUT);
+pinMode(echo,INPUT);
+voltaje_comedor = LOW;
 }
 
 void loop() {
@@ -45,6 +54,9 @@ if(readString.length() > 0)
   Serial.println(readString);
   prender_y_apagar(readString);
 }
+long distancia = calcular_distancia_ultrasonico(trig, echo);
+prender_comedor_ultrasonico(distancia, comedor);
+
 }
 
 void prender_y_apagar(String texto){
@@ -60,6 +72,7 @@ void prender_y_apagar(String texto){
   }
   else if(texto.endsWith("comedor"))
   {
+  voltaje_comedor = voltaje;
   digitalWrite(comedor, voltaje);
   }
   else if(texto.endsWith("sala"))
@@ -74,4 +87,28 @@ void prender_y_apagar(String texto){
     digitalWrite(sala, voltaje);
   }
   readString = "";
+}
+
+long calcular_distancia_ultrasonico(int trig, int echo){
+  long dur;
+  long dis;
+  long tocm;
+  digitalWrite(trig,LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig,LOW);
+  dur=pulseIn(echo,HIGH);
+  tocm= dur/29/2;
+  Serial.println(String(tocm));
+  delay(100);
+  return tocm;
+}
+
+void prender_comedor_ultrasonico(long distancia, int comedor){
+  if (distancia < 20){
+    Serial.println("entre");
+  voltaje_comedor = voltaje_comedor == LOW ? HIGH : LOW;
+  digitalWrite(comedor,voltaje_comedor);
+}
 }
