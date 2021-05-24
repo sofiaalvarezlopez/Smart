@@ -1,80 +1,77 @@
 /**
- * Proyecto Electronica para Ciencias
+ * Smart: Proyecto Electronica para Ciencias
  * Juan Sebastian Rodriguez Paez - 201812327
  * Maria Sofia Alvarez Lopez - 201729031
  */
 
+ /*
+  * Variables Globales
+  */
 
+//Representa el pin D6 del Arduino. En este caso, conectado a la alcoba.
+int alcoba = 6;
+//Representa el pin D7 del Arduino. En este caso, conectado a la cocina.
+int cocina = 7;
+//Representa el pin D8 del Arduino. En este caso, conectado a la sala.
+int sala = 8;
+//Representa el pin D8 del Arduino. En este caso, conectado al comedor.
+int comedor = 9;
+//Representa el texto leído por el módulo Bluetooth desde la aplicación en AppInventor.
 String readString;
+
+// put your setup code here, to run once:
 void setup() {
-  // put your setup code here, to run once:
+  
 Serial.begin(9600);
-pinMode(6, OUTPUT);
-pinMode(7,OUTPUT);
-pinMode(8,OUTPUT);
-pinMode(9,OUTPUT);
-Serial.println("Texto");
+//Cada PIN corresponde a una señal de salida: 0V o 5V para prender/apagar el relé.
+pinMode(alcoba, OUTPUT);
+pinMode(cocina,OUTPUT);
+pinMode(sala,OUTPUT);
+pinMode(comedor,OUTPUT);
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+
+//Lee cada caracter del texto traido por bluetooth y dicho por voz en la aplicación móvil.
 while(Serial.available()){
   delay(3);
   char c = Serial.read();
   readString+=c;
 }
 
-if(readString.length() >0)
+if(readString.length() > 0)
 {
   Serial.println(readString);
+  prender_y_apagar(readString);
+}
+}
+
+void prender_y_apagar(String texto){
+  int voltaje = texto.startsWith("prende") ? HIGH : LOW;
   
-  if(readString == "prende cocina")
+  if(texto.endsWith("alcoba"))
   {
-  digitalWrite(7, HIGH);
+  digitalWrite(alcoba, voltaje);
   }
- else if(readString == "apaga cocina")
+  else if(texto.endsWith("cocina"))
   {
-  digitalWrite(7, LOW);
+  digitalWrite(cocina, voltaje);
   }
-  else if(readString == "prende alcoba")
+  else if(texto.endsWith("comedor"))
   {
-  digitalWrite(6, HIGH);
+  digitalWrite(comedor, voltaje);
   }
-  else if(readString == "apaga alcoba")
+  else if(texto.endsWith("sala"))
   {
-  digitalWrite(6, LOW);
+  digitalWrite(sala, voltaje);
   }
-  else if(readString == "prende comedor")
+  else if(texto.endsWith("todo"))
   {
-  digitalWrite(9, HIGH);
-  }
-  else if(readString == "apaga comedor")
-  {
-  digitalWrite(9, LOW);
-  }
-  else if(readString == "prende sala")
-  {
-  digitalWrite(8, HIGH);
-  }
-  else if(readString == "apaga sala")
-  {
-  digitalWrite(8, LOW);
-  }
-  else if(readString == "prende todo")
-  {
-    digitalWrite(6, HIGH);
-    digitalWrite(7, HIGH);
-    digitalWrite(8, HIGH);
-    digitalWrite(9, HIGH);
-  }
-  else if(readString == "apaga todo")
-  {
-    digitalWrite(6, LOW);
-    digitalWrite(7, LOW);
-    digitalWrite(8, LOW);
-    digitalWrite(9, LOW);
+    digitalWrite(alcoba, voltaje);
+    digitalWrite(cocina, voltaje);
+    digitalWrite(comedor, voltaje);
+    digitalWrite(sala, voltaje);
   }
   readString = "";
-}
 }
