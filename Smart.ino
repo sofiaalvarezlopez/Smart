@@ -20,8 +20,12 @@ int comedor = 9;
 int trig = 12;
 //Representa el pin D13 del Arduino, conectado al pin ECHO del sensor ultrasónico.
 int echo = 13;
+//Representa el pin D2 del Arduino, al que esta conectado el sensor tactil.
+int tactil = 2;
 //Representa el voltaje que hay en el comedor.
 int voltaje_comedor;
+//Representa el voltaje que hay en el cuarto.
+int voltaje_cuarto;
 
 //Representa el texto leído por el módulo Bluetooth desde la aplicación en AppInventor.
 String readString;
@@ -37,7 +41,9 @@ pinMode(sala,OUTPUT);
 pinMode(comedor,OUTPUT);
 pinMode(trig,OUTPUT);
 pinMode(echo,INPUT);
+pinMode(tactil,INPUT);
 voltaje_comedor = LOW;
+voltaje_cuarto = LOW;
 }
 
 void loop() {
@@ -56,6 +62,7 @@ if(readString.length() > 0)
 }
 long distancia = calcular_distancia_ultrasonico(trig, echo);
 prender_comedor_ultrasonico(distancia, comedor);
+prender_cuarto_tactil(tactil,alcoba);
 
 }
 
@@ -64,6 +71,7 @@ void prender_y_apagar(String texto){
   
   if(texto.endsWith("alcoba"))
   {
+   voltaje_cuarto = voltaje;
   digitalWrite(alcoba, voltaje);
   }
   else if(texto.endsWith("cocina"))
@@ -72,7 +80,6 @@ void prender_y_apagar(String texto){
   }
   else if(texto.endsWith("comedor"))
   {
-  voltaje_comedor = voltaje;
   digitalWrite(comedor, voltaje);
   }
   else if(texto.endsWith("sala"))
@@ -106,9 +113,22 @@ long calcular_distancia_ultrasonico(int trig, int echo){
 }
 
 void prender_comedor_ultrasonico(long distancia, int comedor){
-  if (distancia < 20){
+  if (distancia < 5){
     Serial.println("entre");
   voltaje_comedor = voltaje_comedor == LOW ? HIGH : LOW;
   digitalWrite(comedor,voltaje_comedor);
 }
 }
+
+void prender_cuarto_tactil(int tactil, int cuarto){
+  long tiempo = 0;
+  long debounce = 200;
+  int p = LOW;
+  int medida = digitalRead(tactil);
+  if (medida == HIGH && p == LOW && millis() - tiempo > debounce) {
+    voltaje_cuarto = voltaje_cuarto == HIGH ? LOW : HIGH;
+    tiempo = millis();   
+    digitalWrite(cuarto, voltaje_cuarto); 
+  }
+  p = medida;
+  }
