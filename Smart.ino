@@ -7,6 +7,9 @@
  /*
   * Variables Globales
   */
+#include <SoftwareSerial.h> 
+#include "dht.h"
+SoftwareSerial bt(0,1); // RX, TX
 
 //Representa el pin D6 del Arduino. En este caso, conectado a la alcoba.
 int alcoba = 6;
@@ -23,9 +26,17 @@ int echo = 13;
 //Representa el pin D2 del Arduino, al que esta conectado el sensor tactil.
 int tactil = 2;
 //Representa el voltaje que hay en el comedor.
-int voltaje_comedor;
+int voltaje_comedor = LOW;
 //Representa el voltaje que hay en el cuarto.
-int voltaje_cuarto;
+int voltaje_cuarto = LOW;
+//Representa el puerto A0 donde recibimos la informacion de temperatura y humedad.
+int pin_datos = A0;
+//Representa al sensor de humedad y temperatura y es una instancia de dht.
+dht DHT;
+//Representa la temperatura que medira el sensor DHT 11.
+double temperatura;
+//Representa la humedad que medira el sensor DHT 11.
+double humedad;
 
 //Representa el texto leído por el módulo Bluetooth desde la aplicación en AppInventor.
 String readString;
@@ -34,6 +45,7 @@ String readString;
 void setup() {
   
 Serial.begin(9600);
+bt.begin(9600);
 //Cada PIN corresponde a una señal de salida: 0V o 5V para prender/apagar el relé.
 pinMode(alcoba, OUTPUT);
 pinMode(cocina,OUTPUT);
@@ -42,8 +54,8 @@ pinMode(comedor,OUTPUT);
 pinMode(trig,OUTPUT);
 pinMode(echo,INPUT);
 pinMode(tactil,INPUT);
-voltaje_comedor = LOW;
-voltaje_cuarto = LOW;
+pinMode(pin_datos, INPUT);
+
 }
 
 void loop() {
@@ -57,12 +69,13 @@ while(Serial.available()){
 
 if(readString.length() > 0)
 {
-  Serial.println(readString);
+  //Serial.println(readString);
   prender_y_apagar(readString);
 }
 long distancia = calcular_distancia_ultrasonico(trig, echo);
 prender_comedor_ultrasonico(distancia, comedor);
 prender_cuarto_tactil(tactil,alcoba);
+medir_temperatura_humedad(pin_datos);
 
 }
 
@@ -107,14 +120,13 @@ long calcular_distancia_ultrasonico(int trig, int echo){
   digitalWrite(trig,LOW);
   dur=pulseIn(echo,HIGH);
   tocm= dur/29/2;
-  Serial.println(String(tocm));
-  delay(100);
+  //Serial.println(String(tocm));
   return tocm;
 }
 
 void prender_comedor_ultrasonico(long distancia, int comedor){
   if (distancia < 5){
-    Serial.println("entre");
+    //Serial.println("entre");
   voltaje_comedor = voltaje_comedor == LOW ? HIGH : LOW;
   digitalWrite(comedor,voltaje_comedor);
 }
@@ -131,4 +143,16 @@ void prender_cuarto_tactil(int tactil, int cuarto){
     digitalWrite(cuarto, voltaje_cuarto); 
   }
   p = medida;
-  }
+}
+
+void medir_temperatura_humedad(int pin_datos){
+  int leer_datos = DHT.read11(pin_datos);
+  temperatura = DHT.temperature;
+  humedad = DHT.humidity;
+  
+ Serial.print(temperatura); //send distance to MIT App
+ Serial.print(";");
+ Serial.print(humedad); //send distance to MIT App 
+ Serial.println(";");
+  
+}
