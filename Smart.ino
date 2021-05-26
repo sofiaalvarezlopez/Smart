@@ -37,6 +37,10 @@ dht DHT;
 double temperatura;
 //Representa la humedad que medira el sensor DHT 11.
 double humedad;
+//Contador temperatura
+int contador_temp = 0;
+//Contador proximidad
+int contador_prox = 0;
 
 //Representa el texto leído por el módulo Bluetooth desde la aplicación en AppInventor.
 String readString;
@@ -59,7 +63,6 @@ pinMode(pin_datos, INPUT);
 }
 
 void loop() {
-
 //Lee cada caracter del texto traido por bluetooth y dicho por voz en la aplicación móvil.
 while(Serial.available()){
   delay(3);
@@ -73,12 +76,22 @@ if(readString.length() > 0)
   prender_y_apagar(readString);
 }
 long distancia = calcular_distancia_ultrasonico(trig, echo);
-prender_comedor_ultrasonico(distancia, comedor);
 prender_cuarto_tactil(tactil,alcoba);
-medir_temperatura_humedad(pin_datos);
 
+if (contador_prox == 100 || contador_prox == 0){
+  prender_comedor_ultrasonico(distancia, comedor);
+  contador_prox = 0;
 }
 
+if (contador_temp == 1000 || contador_temp == 0){
+  medir_temperatura_humedad(pin_datos);
+  contador_temp = 0;
+}
+contador_temp += 1;
+contador_prox += 1;
+}
+
+// Esta parte corresponde a si decide prender o no según la condición que se le alimenta.
 void prender_y_apagar(String texto){
   int voltaje = texto.startsWith("prende") ? HIGH : LOW;
   
@@ -109,6 +122,7 @@ void prender_y_apagar(String texto){
   readString = "";
 }
 
+// Parte del código para calcular la distancia medida por el sensor ultrasónico.
 long calcular_distancia_ultrasonico(int trig, int echo){
   long dur;
   long dis;
@@ -124,6 +138,7 @@ long calcular_distancia_ultrasonico(int trig, int echo){
   return tocm;
 }
 
+// Parte del código que decide prender o no el bombillo del comedor según la distancia que se calcula.
 void prender_comedor_ultrasonico(long distancia, int comedor){
   if (distancia < 5){
     //Serial.println("entre");
@@ -132,6 +147,8 @@ void prender_comedor_ultrasonico(long distancia, int comedor){
 }
 }
 
+// Parte del código asignada al sensor Touch
+//Invierte el voltaje que haya: si se toca y está encendido, lo apaga y viceversa.
 void prender_cuarto_tactil(int tactil, int cuarto){
   long tiempo = 0;
   long debounce = 200;
@@ -145,11 +162,11 @@ void prender_cuarto_tactil(int tactil, int cuarto){
   p = medida;
 }
 
+// Parte del código asignada a la medición de la temperatura y la humedad del ambiente. 
 void medir_temperatura_humedad(int pin_datos){
   int leer_datos = DHT.read11(pin_datos);
   temperatura = DHT.temperature;
   humedad = DHT.humidity;
-  
  Serial.print(temperatura); //send distance to MIT App
  Serial.print(";");
  Serial.print(humedad); //send distance to MIT App 
