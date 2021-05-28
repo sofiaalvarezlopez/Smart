@@ -1,5 +1,6 @@
-int televisor = 8;
-int radio = 9;
+int radio = 8;
+int televisor = 9;
+
 
 //Representa el texto leído por el módulo Bluetooth desde la aplicación en AppInventor.
 String readString;
